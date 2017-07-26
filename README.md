@@ -1,0 +1,3 @@
+# PipelineTypingOnly
+
+- Project to make use the assembly pipeline for typing only if assemblies are already done. More info soon...
