@@ -14,6 +14,7 @@ __author__ = 'adamkoziol', 'andrewlow'
 
 def get_genome_info(fastafile):
     # TODO: Percent GC is giving a (slightly) different number than what qualimap was getting before. Look into this.
+    # Looks to be because qualimap was giving GC content of mapped reads - this is probably a better way of doing things
     from Bio import SeqIO
     from Bio.SeqUtils import GC
     num_bases = 0
@@ -27,6 +28,28 @@ def get_genome_info(fastafile):
     gc_percent = str('%.2f' % GC(total_seq))
     return str(num_bases) + 'bp', str(num_contigs), gc_percent
 
+
+def remove_uncecessary_columns(result_file):
+    import csv
+    import os
+    necessary_columns = ['SampleName', 'N50', 'NumContigs', 'TotalLength', 'ReferenceGenome', 'RefGenomeAlleleMatches',
+                         '16sPhylogeny', 'rMLSTsequenceType', 'MLSTsequencetype', 'MLSTmatches', 'coreGenome',
+                         'Serotype', 'geneSeekrProfile', 'vtyperProfile', 'percentGC', 'TotalPredictedGenes',
+                         'predictedgenesover3000bp', 'predictedgenesover1000bp', 'predictedgenesover500bp',
+                         'predictedgenesunder500bp']
+    with open(result_file.replace("combinedMetadata", "typingInfo"), 'w') as out_handle:
+        tmp_row = list()
+        for column in necessary_columns:
+            tmp_row.append(column)
+        out_handle.write(','.join(tmp_row) + "\n")
+        with open(result_file, "r") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                tmp_row = list()
+                for column in necessary_columns:
+                    tmp_row.append(row[column])
+                out_handle.write(','.join(tmp_row) + "\n")
+    os.remove(result_file)
 
 class RunTyping(object):
     """
@@ -106,7 +129,7 @@ class RunTyping(object):
             os.system("cp " + fasta + " " + fasta.replace(".fasta", ""))
         # Now use createObject to make bestassemblyfile.
         self.runmetadata = createobject.ObjectCreation(self)
-        runMetadata.Metadata(self)
+        # runMetadata.Metadata(self)
         # createobject.ObjectCreation(self)
         prodigal.Prodigal(self)
         metadataprinter.MetadataPrinter(self)
@@ -278,6 +301,7 @@ class RunTyping(object):
         # Get all the versions of the software used
         versions.Versions(self)
         metadataprinter.MetadataPrinter(self)
+        remove_uncecessary_columns(self.reportpath + "/combinedMetadata.csv")
 
 # If the script is called from the command line, then call the argument parser
 if __name__ == '__main__':
