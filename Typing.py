@@ -12,7 +12,23 @@ import glob
 __author__ = 'adamkoziol', 'andrewlow'
 
 
-class RunSpades(object):
+def get_genome_info(fastafile):
+    # TODO: Percent GC is giving a (slightly) different number than what qualimap was getting before. Look into this.
+    from Bio import SeqIO
+    from Bio.SeqUtils import GC
+    num_bases = 0
+    num_contigs = 0
+    genome = SeqIO.parse(fastafile, 'fasta')
+    total_seq = ""
+    for contig in genome:
+        num_contigs += 1
+        num_bases += len(contig.seq)
+        total_seq += str(contig.seq)
+    gc_percent = str('%.2f' % GC(total_seq))
+    return str(num_bases) + 'bp', str(num_contigs), gc_percent
+
+
+class RunTyping(object):
     """
     def assembly(self):
         Helper function for file creation (if desired), manipulation, quality assessment,
@@ -80,15 +96,18 @@ class RunSpades(object):
         from metagenomefilter import automateCLARK
         # TODO: Test this on a computer with more RAM. CLARK seems to be working, but it isn't going to run on this machine.
         # automateCLARK.PipelineInit(self)
-        self.runmetadata = runMetadata.Metadata(self)
-        # TODO: If this works, use absolute path and whatnot.
+        # self.runmetadata = runMetadata.Metadata(self)
+        # self.runmetadata = createobject.ObjectCreation(self)
+        # TODO: Change the copying to subprocess instead of os.system
         fasta_files = glob.glob(self.path + "*.fasta")
         for fasta in fasta_files:
             make_path(fasta.replace(".fasta", ""))
             print("cp " + fasta + " " + fasta.replace(".fasta", ""))
             os.system("cp " + fasta + " " + fasta.replace(".fasta", ""))
-        self.runmetadata = createobject.ObjectCreation(self)
         # Now use createObject to make bestassemblyfile.
+        self.runmetadata = createobject.ObjectCreation(self)
+        runMetadata.Metadata(self)
+        # createobject.ObjectCreation(self)
         prodigal.Prodigal(self)
         metadataprinter.MetadataPrinter(self)
         # Run mash
@@ -233,12 +252,16 @@ class RunSpades(object):
         # Things reporter expects that I don't have here: NumContigs, TotalLength, MeanInsertSize, AverageCoverageDepth
         # All Run info. May need to modify the reporter.
         # This is an awful lot of dummy info. Some can be found manually (numcontigs and whatnot would be easy)
+        # Things I want to actually get: Number of contigs, number of bases, gc percentage.
         for sample in self.runmetadata.samples:
-            sample.mapping.Contigs = '1'
-            sample.mapping.Bases = "100000bp1"
+            sample.mapping = GenObject()
+            sample.mapping.Bases, sample.mapping.Contigs, sample.mapping.GcPercentage \
+                = get_genome_info(sample.general.bestassemblyfile)
+            #sample.mapping.Contigs = '1'
+            #sample.mapping.Bases = "100000bp1"
             sample.mapping.MeanInsertSize = "200"
             sample.mapping.MeanCoveragedata = "30X"
-            sample.mapping.GcPercentage = "50"
+            #sample.mapping.GcPercentage = "50"
             sample.coregenome.targetspresent = '3'
             sample.coregenome.totaltargets = '4'
             sample.run.Date = "2017-07-27"
@@ -330,6 +353,9 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
     starttime = time()
     # Run the pipeline
-    RunSpades(arguments, commit, starttime, homepath)
-    printtime('Assembly and characterisation complete', starttime)
+    RunTyping(arguments, commit, starttime, homepath)
+    printtime('Characterisation complete', starttime)
     quit()
+
+
+
