@@ -99,12 +99,14 @@ class RunSpades(object):
         # Print the metadata to file
         metadataprinter.MetadataPrinter(self)
         # Run quast assembly metrics
+        for sample in self.runmetadata.samples:
+            sample.general.filteredfile = sample.general.bestassemblyfile
         quaster.Quast(self)
         # Calculate the depth of coverage as well as other quality metrics using Qualimap
         metadataprinter.MetadataPrinter(self)
-        depth.QualiMap(self)
+        # depth.QualiMap(self)
         # Print the metadata to file
-        metadataprinter.MetadataPrinter(self)
+        # metadataprinter.MetadataPrinter(self)
 
     def typing(self):
         from spadespipeline import mMLST
@@ -151,10 +153,11 @@ class RunSpades(object):
         metadataprinter.MetadataPrinter(self)
         vtyper.Vtyper(self, 'vtyper')
         metadataprinter.MetadataPrinter(self)
-        coregen = GeneSeekr.PipelineInit(self, 'coreGenome', True, 70, False)
-        core.CoreGenome(coregen)
-        core.AnnotatedCore(self)
-        metadataprinter.MetadataPrinter(self)
+        # TODO: Figure out how to make coreGenome stuff work.
+        # coregen = GeneSeekr.PipelineInit(self, 'coreGenome', True, 70, False)
+        # core.CoreGenome(coregen)
+        # core.AnnotatedCore(self)
+        # metadataprinter.MetadataPrinter(self)
         sistr.Sistr(self, 'sistr')
         # res = resfinder.PipelineInit(self, 'resfinder', False, 80)
         res = GeneSeekr.PipelineInit(self, 'resfinder', False, 80, True)
@@ -185,7 +188,7 @@ class RunSpades(object):
         # self.forwardlength = args.readlengthforward
         # self.reverselength = args.readlengthreverse
         # self.numreads = 1 if self.reverselength == 0 else args.numreads
-        # self.kmers = args.kmerrange
+        self.kmers = args.kmerrange
         # self.preprocess = args.preprocess
         self.updatedatabases = args.updatedatabases
         # Define the start time
@@ -227,6 +230,26 @@ class RunSpades(object):
         except KeyboardInterrupt:
             raise KeyboardInterruptError
         # Create a report
+        # Things reporter expects that I don't have here: NumContigs, TotalLength, MeanInsertSize, AverageCoverageDepth
+        # All Run info. May need to modify the reporter.
+        # This is an awful lot of dummy info. Some can be found manually (numcontigs and whatnot would be easy)
+        for sample in self.runmetadata.samples:
+            sample.mapping.Contigs = '1'
+            sample.mapping.Bases = "100000bp1"
+            sample.mapping.MeanInsertSize = "200"
+            sample.mapping.MeanCoveragedata = "30X"
+            sample.mapping.GcPercentage = "50"
+            sample.coregenome.targetspresent = '3'
+            sample.coregenome.totaltargets = '4'
+            sample.run.Date = "2017-07-27"
+            sample.run.InvestigatorName = "Darles Charwin"
+            sample.run.TotalClustersinRun = '2'
+            sample.run.NumberofClustersPF = '2'
+            sample.run.PercentOfClusters = '1'
+            sample.run.forwardlength = '1'
+            sample.run.reverselength = '1'
+            sample.run.SampleProject = '1'
+            sample.general.spadesoutput = "dummyfolder"
         reporter.Reporter(self)
         compress.Compress(self)
         # Get all the versions of the software used
@@ -285,9 +308,9 @@ if __name__ == '__main__':
                         default='/spades_pipeline/SPAdesPipelineFiles',
                         help='Provide the location of the folder containing the pipeline accessory files (reference '
                              'genomes, MLST data, etc.')
-    #parser.add_argument('-k', '--kmerrange',
-    #                    default='21,33,55,77,99,127',
-    #                    help='The range of kmers used in SPAdes assembly. Default is 21,33,55,77,99,127')
+    parser.add_argument('-k', '--kmerrange',
+                        default='21,33,55,77,99,127',
+                        help='The range of kmers used in SPAdes assembly. Default is 21,33,55,77,99,127')
     parser.add_argument('-c', '--customsamplesheet',
                         help='Path of folder containing a custom sample sheet and name of sample sheet file '
                              'e.g. /home/name/folder/BackupSampleSheet.csv. Note that this sheet must still have the '
