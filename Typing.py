@@ -163,6 +163,7 @@ class RunTyping(object):
         from coreGenome import core
         # import coreGenome
         from spadespipeline import sistr
+        import copy
         # import resfinder
         # Run modules and print metadata to file
         mMLST.PipelineInit(self, 'mlst')
@@ -187,7 +188,13 @@ class RunTyping(object):
         metadataprinter.MetadataPrinter(self)
         # vir = GeneSeekr.PipelineInit(self, 'virulence', True, 70)
         # virulence.Virulence(vir)
+        # For some reason this works with E.coli but not Salmonella or Listeria. Apparently that's the way it's supposed
+        # to be.
         vir = GeneSeekr.PipelineInit(self, 'virulence', True, 80, True)
+        # Remove samples that are not Escherichia so virulence finder doesn't attempt to work on them.
+        for sample in vir.runmetadata.samples:
+            if sample.general.referencegenus != 'Escherichia':
+                vir.runmetadata.samples.remove(sample)
         GeneSeekr.GeneSeekr(vir)
         metadataprinter.MetadataPrinter(self)
         # armiobject = GeneSeekr.PipelineInit(self, 'ARMI', False, 70)
@@ -196,8 +203,9 @@ class RunTyping(object):
         vtyper.Vtyper(self, 'vtyper')
         metadataprinter.MetadataPrinter(self)
         # TODO: Figure out how to make coreGenome stuff work.
-        # coregen = GeneSeekr.PipelineInit(self, 'coreGenome', True, 70, False)
-        # core.CoreGenome(coregen)
+        #coregen = GeneSeekr.PipelineInit(self, 'coreGenome', True, 70, False)
+        #core.CoreGenome(coregen)
+        # coregenome stuff works up until here, and then fails.
         # core.AnnotatedCore(self)
         # metadataprinter.MetadataPrinter(self)
         sistr.Sistr(self, 'sistr')
