@@ -192,10 +192,14 @@ class RunTyping(object):
         # to be.
         vir = GeneSeekr.PipelineInit(self, 'virulence', True, 80, True)
         # Remove samples that are not Escherichia so virulence finder doesn't attempt to work on them.
+        to_be_readded = list()
         for sample in vir.runmetadata.samples:
             if sample.general.referencegenus != 'Escherichia':
+                to_be_readded.append(sample)
                 vir.runmetadata.samples.remove(sample)
         GeneSeekr.GeneSeekr(vir)
+        for sample in to_be_readded:
+            self.runmetadata.samples.append(sample)
         metadataprinter.MetadataPrinter(self)
         # armiobject = GeneSeekr.PipelineInit(self, 'ARMI', False, 70)
         # armi.ARMI(armiobject)
@@ -203,8 +207,8 @@ class RunTyping(object):
         vtyper.Vtyper(self, 'vtyper')
         metadataprinter.MetadataPrinter(self)
         # TODO: Figure out how to make coreGenome stuff work.
-        #coregen = GeneSeekr.PipelineInit(self, 'coreGenome', True, 70, False)
-        #core.CoreGenome(coregen)
+        coregen = GeneSeekr.PipelineInit(self, 'coreGenome', True, 70, False)
+        core.CoreGenome(coregen)
         # coregenome stuff works up until here, and then fails.
         # core.AnnotatedCore(self)
         # metadataprinter.MetadataPrinter(self)
@@ -293,8 +297,8 @@ class RunTyping(object):
             sample.mapping.MeanInsertSize = "200"
             sample.mapping.MeanCoveragedata = "30X"
             #sample.mapping.GcPercentage = "50"
-            sample.coregenome.targetspresent = '3'
-            sample.coregenome.totaltargets = '4'
+            # sample.coregenome.targetspresent = '3'
+            # sample.coregenome.totaltargets = '4'
             sample.run.Date = "2017-07-27"
             sample.run.InvestigatorName = "Darles Charwin"
             sample.run.TotalClustersinRun = '2'
