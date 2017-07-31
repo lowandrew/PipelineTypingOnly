@@ -158,12 +158,11 @@ class RunTyping(object):
         from spadespipeline import prophages
         from spadespipeline import plasmidfinder
         from spadespipeline import serotype
-        # import virulence
+        from spadespipeline import virulence
         from spadespipeline import vtyper
         from coreGenome import core
         # import coreGenome
         from spadespipeline import sistr
-        import copy
         # import resfinder
         # Run modules and print metadata to file
         mMLST.PipelineInit(self, 'mlst')
@@ -193,21 +192,31 @@ class RunTyping(object):
         vir = GeneSeekr.PipelineInit(self, 'virulence', True, 80, True)
         # Remove samples that are not Escherichia so virulence finder doesn't attempt to work on them.
         to_be_readded = list()
+        to_be_deleted = list()
         for sample in vir.runmetadata.samples:
+            print(sample.general.referencegenus)
             if sample.general.referencegenus != 'Escherichia':
                 to_be_readded.append(sample)
-                vir.runmetadata.samples.remove(sample)
-        GeneSeekr.GeneSeekr(vir)
+                to_be_deleted.append(sample)
+        for sample in to_be_deleted:
+            vir.runmetadata.samples.remove(sample)
+        if len(vir.runmetadata.samples) > 0:
+            GeneSeekr.GeneSeekr(vir)
         for sample in to_be_readded:
             self.runmetadata.samples.append(sample)
         metadataprinter.MetadataPrinter(self)
         # armiobject = GeneSeekr.PipelineInit(self, 'ARMI', False, 70)
         # armi.ARMI(armiobject)
         metadataprinter.MetadataPrinter(self)
+        for sample in self.runmetadata.samples:
+            for key in sample.geneseekr.blastresults:
+                if "vt" in key or "VT" in key:
+                    sample.general.stx = True
+                    sample.general.filenoext = sample.general.filteredfile.split('.')[0]
         vtyper.Vtyper(self, 'vtyper')
         metadataprinter.MetadataPrinter(self)
         # TODO: Figure out how to make coreGenome stuff work.
-        coregen = GeneSeekr.PipelineInit(self, 'coreGenome', True, 70, False)
+        coregen = GeneSeekr.PipelineInit(self, 'coregenome', True, 70, False)
         core.CoreGenome(coregen)
         # coregenome stuff works up until here, and then fails.
         # core.AnnotatedCore(self)
