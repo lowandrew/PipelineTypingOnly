@@ -83,7 +83,10 @@ class RunTyping(object):
             # Determine the name and extension of the fasta file
             fastaname = os.path.split(fasta)[-1]
             # Copy the file into the appropriate folder
-            shutil.copy(fasta, os.path.join(fasta_dir, fastaname))
+            try:
+                shutil.copyfile(fasta, os.path.join(fasta_dir, fastaname))
+            except shutil.SameFileError:
+                pass
         # Perform quality assessments. After each method completes, print the metadata to file
         # Run gene predictions
         prodigal.Prodigal(self)
@@ -135,7 +138,7 @@ class RunTyping(object):
         serotype.Serotype(sero)
         metadataprinter.MetadataPrinter(self)
         vir = GeneSeekr.PipelineInit(self, 'virulence', True, 70, True)
-        virulence.Virulence(vir)
+        # virulence.Virulence(vir)
         # Remove samples that are not Escherichia so virulence finder doesn't attempt to work on them.
         to_be_readded = list()
         to_be_deleted = list()
@@ -182,7 +185,6 @@ class RunTyping(object):
         import multiprocessing
         from spadespipeline import versions
         import time
-        printtime('Welcome to the CFIA bacterial typing pipeline', self.starttime)
         # Define variables from the arguments - there may be a more streamlined way to do this
         self.args = args
         self.path = os.path.join(args.path, '')
@@ -192,6 +194,7 @@ class RunTyping(object):
         self.kmers = args.kmerrange
         self.updatedatabases = args.updatedatabases
         self.starttime = startingtime
+        printtime('Welcome to the CFIA bacterial typing pipeline', self.starttime)
         self.customsamplesheet = args.customsamplesheet
         if self.customsamplesheet:
             assert os.path.isfile(self.customsamplesheet), 'Cannot find custom sample sheet as specified {}'\
@@ -293,4 +296,4 @@ if __name__ == '__main__':
     # Run the pipeline
     RunTyping(arguments, commit, starttime, homepath)
     # Print a bold, green exit statement
-    print('\033[92m' + '\033[1m' + "\nElapsed Time: %0.2f seconds" % (starttime() - arguments.start) + '\033[0m')
+    printtime('Run complete!', starttime)
