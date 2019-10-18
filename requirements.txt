@@ -22,5 +22,5 @@ six==1.10.0
 tables==3.4.2
 tqdm==4.14.0
 twine==1.9.1
-urllib3==1.21.1
+urllib3==1.24.2
 XlsxWriter==0.9.8
