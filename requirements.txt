@@ -14,7 +14,7 @@ pycurl==7.43.0
 python-dateutil==2.6.1
 pytz==2017.2
 quast==4.5
-requests==2.18.1
+requests==2.20.0
 requests-toolbelt==0.8.0
 simplejson==3.11.1
 sistr-cmd==1.0.2
