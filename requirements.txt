@@ -3,7 +3,7 @@ certifi==2017.4.17
 chardet==3.0.4
 future==0.16.0
 idna==2.5
-joblib==0.11
+joblib==1.2.0
 numexpr==2.6.2
 numpy==1.13.1
 OLCTools==0.2.1
